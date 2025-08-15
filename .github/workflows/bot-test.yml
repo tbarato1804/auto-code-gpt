@@ -29,6 +29,9 @@ jobs:
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
+    - name: Auto-format suggestion with black
+      run: black suggestion.txt
+
     - name: Validate suggestion format with black
       run: |
         black --check suggestion.txt || (echo '❌ El código sugerido no pasa black' && exit 1)

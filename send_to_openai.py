@@ -1,3 +1,4 @@
+
 # send_to_openai.py
 import json
 import os
@@ -6,9 +7,6 @@ from openai import OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def clean_code_block(text):
-    """
-    Elimina etiquetas Markdown como ```python y ``` del código sugerido.
-    """
     if "```" in text:
         lines = text.splitlines()
         cleaned = [line for line in lines if not line.strip().startswith("```")]

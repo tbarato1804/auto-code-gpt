@@ -1,8 +1,9 @@
-# Auto-Code GPT (Extendido)
+# Auto-Code GPT (Fixed Version)
 
-Este repositorio prueba un flujo automatizado de:
+Este repositorio automatiza:
 
-1. Ejecutar un test simulado (`test_bot.py`)
-2. Enviar errores a OpenAI (`send_to_openai.py`)
-3. Validar el código sugerido con `black`
-4. Guardar automáticamente la sugerencia en el repositorio
+1. Test simulado (`test_bot.py`)
+2. Envío a OpenAI (`send_to_openai.py`)
+3. Limpieza del código sugerido
+4. Formateo automático con `black`
+5. Commit automático si pasa validación
