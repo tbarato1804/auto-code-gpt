@@ -1,11 +1,11 @@
 
-name: Test Bot + OpenAI Suggestion
+name: Test Bot + OpenAI Suggestion + Auto Commit
 
 on:
   workflow_dispatch:
 
 jobs:
-  run-test-and-suggest:
+  run-test-suggest-and-commit:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,8 +17,9 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install OpenAI SDK
-      run: pip install openai
+    - name: Install dependencies
+      run: |
+        pip install openai black
 
     - name: Run bot test
       run: python test_bot.py
@@ -27,3 +28,17 @@ jobs:
       run: python send_to_openai.py
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    - name: Validate suggestion format with black
+      run: |
+        black --check suggestion.txt || (echo '❌ El código sugerido no pasa black' && exit 1)
+
+    - name: Commit suggestion to repo
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add suggestion.txt
+        git commit -m "💡 Sugerencia automática de OpenAI [skip ci]"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
