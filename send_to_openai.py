@@ -1,10 +1,19 @@
-
 # send_to_openai.py
 import json
 import os
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def clean_code_block(text):
+    """
+    Elimina etiquetas Markdown como ```python y ``` del código sugerido.
+    """
+    if "```" in text:
+        lines = text.splitlines()
+        cleaned = [line for line in lines if not line.strip().startswith("```")]
+        return "\n".join(cleaned)
+    return text
 
 def main():
     with open("example_result.json", "r") as f:
@@ -28,11 +37,13 @@ def main():
         ]
     )
 
-    suggestion = response.choices[0].message.content
-    with open("suggestion.txt", "w") as f:
-        f.write(suggestion)
+    raw_suggestion = response.choices[0].message.content
+    cleaned_suggestion = clean_code_block(raw_suggestion)
 
-    print("✍️ Sugerencia guardada en suggestion.txt")
+    with open("suggestion.txt", "w") as f:
+        f.write(cleaned_suggestion)
+
+    print("✍️ Sugerencia limpia guardada en suggestion.txt")
 
 if __name__ == "__main__":
     main()
