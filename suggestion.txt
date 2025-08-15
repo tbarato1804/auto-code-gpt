@@ -1,0 +1,9 @@
+import os
+
+# Asegúrate de que la clave de la API esté establecida en las variables de entorno
+try:
+    TRADIER_API_KEY = os.environ["TRADIER_API_KEY"]
+except KeyError:
+    raise RuntimeError("La variable de entorno 'TRADIER_API_KEY' no está establecida.")
+
+# El resto de tu código...
