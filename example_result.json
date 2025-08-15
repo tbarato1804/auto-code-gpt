@@ -1,0 +1,5 @@
+{
+  "status": "fail",
+  "error": "KeyError: TRADIER_API_KEY",
+  "description": "El script no encontr\u00f3 la variable de entorno necesaria para autenticarse con la API de Tradier."
+}
