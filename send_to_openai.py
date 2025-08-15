@@ -1,10 +1,9 @@
-
 # send_to_openai.py
-import openai
 import json
 import os
+from openai import OpenAI
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def main():
     with open("example_result.json", "r") as f:
@@ -20,7 +19,7 @@ def main():
     Responde solo con el código corregido, sin explicaciones.
     """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "Eres un experto en Python que ayuda a depurar scripts de automatización."},
@@ -28,7 +27,7 @@ def main():
         ]
     )
 
-    suggestion = response.choices[0].message["content"]
+    suggestion = response.choices[0].message.content
     with open("suggestion.txt", "w") as f:
         f.write(suggestion)
 
