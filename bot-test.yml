@@ -1,0 +1,29 @@
+
+name: Test Bot + OpenAI Suggestion
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-test-and-suggest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install OpenAI SDK
+      run: pip install openai
+
+    - name: Run bot test
+      run: python test_bot.py
+
+    - name: Send result to OpenAI for suggestion
+      run: python send_to_openai.py
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
