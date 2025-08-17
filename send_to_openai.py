@@ -1,4 +1,3 @@
-
 # send_to_openai.py
 import json
 import os
@@ -45,6 +44,10 @@ def main():
     # Guardar historial con timestamp
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     history_path = f"history/suggestion-{timestamp}.txt"
+
+    # ⬅️ Esta línea evita el error creando la carpeta si no existe
+    os.makedirs("history", exist_ok=True)
+
     with open(history_path, "w") as f:
         f.write(cleaned_suggestion)
 
