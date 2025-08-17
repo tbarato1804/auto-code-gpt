@@ -17,8 +17,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Clonar repo Tradier
-        run: git clone ${{ env.TRADIER_REPO }} tradier
+      - name: Clonar repo Tradier con autenticación
+        run: |
+          git clone https://tbarato1804:${{ secrets.TRADIER_PAT }}@github.com/tbarato1804/tradier.git tradier
+
 
       - name: Instalar dependencias
         run: pip install -r requirements.txt
