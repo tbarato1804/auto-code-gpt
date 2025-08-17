@@ -27,8 +27,8 @@ jobs:
         run: python analyze_tradier_bot.py
 
       - name: Clone Tradier repo privately
-        run: |
-          git clone https://tbarato1804:${{ env.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
+        run: git clone https://tbarato1804:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
+
 
       - name: Create patch branch
         run: |
