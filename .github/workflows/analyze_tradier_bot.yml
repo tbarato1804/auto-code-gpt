@@ -42,10 +42,12 @@ jobs:
         continue-on-error: true
 
       - name: Apply patch to repo if syntax is OK
+        id: apply_patch
         if: success()
         run: |
           cp tradier/gpt_patch_temp.py tradier/applied_patch.py
           echo "✅ Patch aplicado correctamente."
+
 
       - name: Upload patch as artifact
         uses: actions/upload-artifact@v4
