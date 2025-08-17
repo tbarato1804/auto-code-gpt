@@ -23,3 +23,18 @@ if tradier_api_key is None:
 
 # Resto del script
 \n# === FIN GPT SUGERENCIA ===
+\n# === INICIO GPT SUGERENCIA ===
+import os
+
+
+# Intenta obtener la clave de la API de una forma segura
+def get_tradier_api_key():
+    try:
+        return os.environ["TRADIER_API_KEY"]
+    except KeyError:
+        raise LookupError("La variable de entorno 'TRADIER_API_KEY' no está definida.")
+
+
+# Uso de la clave
+api_key = get_tradier_api_key()
+\n# === FIN GPT SUGERENCIA ===
