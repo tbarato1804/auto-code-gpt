@@ -57,3 +57,20 @@ jobs:
         run: |
           mkdir -p suggestions
           cp tradier/gpt_patch.py suggestions/gpt_patch_${{ github.run_id }}.py
+
+      - name: 📣 Comentar en PR si no se aplicó automáticamente
+        if: steps.apply_patch.outcome != 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extrae el ID del último Pull Request abierto por este flujo
+          PR_NUMBER=$(gh pr list --repo tbarato1804/tradier --head suggestion-patch-${{ github.run_id }} --json number -q '.[0].number')
+
+          # Crea un resumen automático del contenido del parche
+          SUMMARY=$(python -c "import re; f=open('tradier/gpt_patch.py'); print(''.join(re.findall(r'def\s+\w+\(.*?\):', f.read())))")
+
+          # Formatea el comentario con botón + resumen
+          COMMENT_MSG="💡 Esta sugerencia no se aplicó automáticamente.\n\n📝 **Resumen del cambio propuesto:**\n\`\`\`python\n$SUMMARY\n\`\`\`\n\n🔘 Para aplicarlo manualmente ahora:\n[![Aplicar este parche ahora](https://img.shields.io/badge/Aplicar_parche-manualmente-blue)](https://github.com/tbarato1804/auto-code-gpt/actions/workflows/merge_and_apply_patch.yml)"
+
+          # Publica el comentario en el PR
+          gh pr comment $PR_NUMBER --repo tbarato1804/tradier --body "$COMMENT_MSG"
