@@ -9,6 +9,17 @@ REPO_DIR = "tradier"
 PATCH_FILE = "gpt_patch.py"
 ERROR_FILE = "syntax_error.txt"
 
+# Palabras clave para ignorar sugerencias inútiles
+IGNORE_KEYWORDS = [
+    "os.getenv(\"TRADIER_API_KEY\")",
+    "La variable de entorno 'TRADIER_API_KEY' no está establecida",
+    "asegúrate de que la variable de entorno",
+    "comprobar si TRADIER_API_KEY está definida",
+]
+
+def should_ignore_suggestion(suggestion: str) -> bool:
+    return any(keyword in suggestion for keyword in IGNORE_KEYWORDS)
+
 # Cambiar al directorio del repo clonado
 os.chdir(REPO_DIR)
 
@@ -54,7 +65,8 @@ clean_code = match.group(1).strip() if match else ""
 
 # Volver a raíz y guardar sugerencia
 os.chdir("..")
-if clean_code:
+
+if clean_code and not should_ignore_suggestion(clean_code):
     with open(PATCH_FILE, "w", encoding="utf-8") as f:
         f.write(clean_code)
     print("✅ Sugerencia generada y guardada.")
@@ -71,7 +83,7 @@ if clean_code:
         exit(1)
 else:
     with open(ERROR_FILE, "w", encoding="utf-8") as f:
-        f.write("⚠️ No se encontró bloque válido de código en la respuesta de OpenAI.\n\n")
+        f.write("⚠️ La sugerencia fue ignorada por ser irrelevante o vacía.\n\n")
         f.write(sugg)
-    print("⚠️ La respuesta no contenía código válido. Se ha generado syntax_error.txt.")
+    print("⚠️ Sugerencia ignorada o inválida. Se ha generado syntax_error.txt.")
     exit(1)
