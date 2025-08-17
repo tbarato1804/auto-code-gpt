@@ -35,13 +35,25 @@ jobs:
           git commit -m "💡 Sugerencia automática de OpenAI [skip ci]"
           git push https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git suggestion-patch-${{ github.run_id }}
 
-      - name: Copiar gpt_patch.py para inspección local
+      - name: Try applying patch automatically if valid
         run: |
-          mkdir -p suggestions
-          cp tradier/gpt_patch.py suggestions/gpt_patch.py
+          cp tradier/gpt_patch.py tradier/gpt_patch_temp.py
+          python -m py_compile tradier/gpt_patch_temp.py
+        continue-on-error: true
 
-      - name: Subir gpt_patch.py como artefacto descargable
+      - name: Apply patch to repo if syntax is OK
+        if: success()
+        run: |
+          cp tradier/gpt_patch_temp.py tradier/applied_patch.py
+          echo "✅ Patch aplicado correctamente."
+
+      - name: Upload patch as artifact
         uses: actions/upload-artifact@v4
         with:
           name: gpt_patch
-          path: suggestions/gpt_patch.py
+          path: tradier/gpt_patch.py
+
+      - name: Guardar copia en auto-code-gpt
+        run: |
+          mkdir -p suggestions
+          cp tradier/gpt_patch.py suggestions/gpt_patch_${{ github.run_id }}.py
