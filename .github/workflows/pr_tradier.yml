@@ -12,7 +12,7 @@ jobs:
 
       - name: Clonar repo Tradier Bot
         run: |
-          git clone https://x-access-token:${{ secrets.TRADIER_BOT_PAT }}@github.com/tbarato1804/tradier-bot.git
+          git clone https://x-access-token:${{ secrets.TRADIER_BOT_PAT }}@github.com/tbarato1804/tradier.git
           ls tradier-bot/
 
       - name: Copiar sugerencia al Tradier Bot
