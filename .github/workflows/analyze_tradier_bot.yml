@@ -36,10 +36,11 @@ jobs:
           git push https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git suggestion-patch-${{ github.run_id }}
 
       - name: Subir gpt_patch.py como artefacto para inspección
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gpt_patch
           path: gpt_patch.py
+
 
       - name: Guardar copia en auto-code-gpt/suggestions/
         run: |
