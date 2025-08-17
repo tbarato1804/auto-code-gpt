@@ -1,0 +1,51 @@
+name: Apply GPT Patch to Tradier Bot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apply-patch:
+    runs-on: ubuntu-latest
+    env:
+      TRADIER_TOKEN: ${{ secrets.TRADIER_TOKEN }}
+
+    steps:
+      - name: Clonar el repositorio original (tradier)
+        run: |
+          git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
+          ls tradier/
+
+      - name: Reemplazar función en archivos originales
+        run: |
+          PATCH_FILE="tradier/gpt_patch.py"
+          FUNCTION_NAME=$(grep -m 1 -oP 'def \K\w+' "$PATCH_FILE")
+
+          echo "🔍 Buscando función: $FUNCTION_NAME"
+
+          FILE_TO_PATCH=$(grep -rl "def $FUNCTION_NAME(" tradier --exclude=gpt_patch.py || true)
+
+          if [ -z "$FILE_TO_PATCH" ]; then
+            echo "⚠️ No se encontró la función '$FUNCTION_NAME' en los archivos originales."
+            exit 0
+          fi
+
+          echo "📄 Se va a modificar: $FILE_TO_PATCH"
+
+          # Extraer el bloque completo de la nueva función
+          awk "/def $FUNCTION_NAME\(.*\):/,/^$/" "$PATCH_FILE" > new_func.py
+
+          # Reemplazar la función en el archivo original
+          sed -i "/def $FUNCTION_NAME(/,/^$/d" "$FILE_TO_PATCH"
+          cat new_func.py >> "$FILE_TO_PATCH"
+
+          echo "✅ Función '$FUNCTION_NAME' reemplazada correctamente."
+
+      - name: Commit y push con cambio aplicado
+        run: |
+          cd tradier
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git checkout -b applied-patch-${{ github.run_id }}
+          git add .
+          git commit -m "🔧 Aplicación automática de la mejora sugerida por OpenAI [skip ci]"
+          git push https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git applied-patch-${{ github.run_id }}
