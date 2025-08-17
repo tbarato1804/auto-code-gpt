@@ -1,0 +1,81 @@
+name: Merge and Apply Patch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  merge-and-test:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TRADIER_API_KEY: ${{ secrets.TRADIER_API_KEY }}
+      TRADIER_ACCOUNT_ID: ${{ secrets.TRADIER_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout Tradier bot
+        uses: actions/checkout@v3
+        with:
+          repository: tbarato1804/tradier
+          path: tradier
+          token: ${{ secrets.TRADIER_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install openai
+
+      - name: 🔍 Merge or Replace Function from gpt_patch.py
+        run: |
+          cd tradier
+          PATCH_FILE="gpt_patch.py"
+          if [ ! -f "$PATCH_FILE" ]; then
+            echo "⚠️ No se encontró gpt_patch.py"
+            exit 1
+          fi
+
+          FUNC_NAME=$(grep -oP '^def\s+\K\w+' "$PATCH_FILE" | head -1)
+          if [ -z "$FUNC_NAME" ]; then
+            echo "⚠️ No se detectó función en el parche"
+            exit 1
+          fi
+
+          echo "📌 Función detectada: $FUNC_NAME"
+
+          TARGET_FILE=$(grep -rl "def $FUNC_NAME" . --include="*.py" | head -1)
+
+          if [ -z "$TARGET_FILE" ]; then
+            echo "🆕 Insertando $FUNC_NAME en utils_patch.py"
+            TARGET_FILE="utils_patch.py"
+            echo "# Auto insertado" >> "$TARGET_FILE"
+            cat "$PATCH_FILE" >> "$TARGET_FILE"
+          else
+            echo "♻️ Reemplazando $FUNC_NAME en $TARGET_FILE"
+            awk -v func="$FUNC_NAME" '
+              BEGIN {found=0}
+              $0 ~ "^def " func "\\(" {found=1; print "# PATCH START"; while(getline && !/^def / && !/^[^ ]/){} print "# PATCH END"; exit}
+              {print}
+            ' "$TARGET_FILE" > temp_file && mv temp_file "$TARGET_FILE"
+            cat "$PATCH_FILE" >> "$TARGET_FILE"
+          fi
+
+      - name: ✅ Verificar sintaxis tras el merge
+        run: |
+          cd tradier
+          python -m compileall .
+
+      - name: 🚀 Ejecutar bot para verificar errores
+        run: |
+          cd tradier
+          python main.py || (echo "❌ Error detectado. Revirtiendo cambios..." && git restore . && exit 1)
+
+      - name: Commit y Push final
+        run: |
+          cd tradier
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "✅ Parche fusionado y verificado automáticamente"
+          git push
