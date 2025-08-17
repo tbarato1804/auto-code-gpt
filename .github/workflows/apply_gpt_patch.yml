@@ -1,0 +1,85 @@
+name: Apply GPT Patch with Safety Checks
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apply-and-test:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TRADIER_TOKEN: ${{ secrets.TRADIER_TOKEN }}
+
+    steps:
+      - name: Clonar Tradier Repo
+        run: git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
+
+      - name: Cambiar a rama del último parche
+        working-directory: tradier
+        run: |
+          branch=$(git branch -r | grep 'suggestion-patch' | tail -n 1 | sed 's/.*origin\///')
+          echo "Última rama: $branch"
+          echo "BRANCH_NAME=$branch" >> $GITHUB_ENV
+          git checkout $branch
+
+      - name: Verificar sintaxis del parche
+        working-directory: tradier
+        run: |
+          cp gpt_patch.py gpt_patch_temp.py
+          python -m py_compile gpt_patch_temp.py
+        continue-on-error: true
+
+      - name: Evaluar resultado de compilación
+        id: check-syntax
+        run: |
+          if [ -f tradier/gpt_patch_temp.pyc ]; then
+            echo "SYNTAX_OK=true" >> $GITHUB_ENV
+          else
+            echo "SYNTAX_OK=false" >> $GITHUB_ENV
+          fi
+
+      - name: Aplicar parche si sintaxis es válida
+        if: env.SYNTAX_OK == 'true'
+        working-directory: tradier
+        run: cp gpt_patch_temp.py applied_patch.py
+
+      - name: Probar ejecución de bot
+        if: env.SYNTAX_OK == 'true'
+        working-directory: tradier
+        run: python main.py
+        continue-on-error: true
+
+      - name: Verificar ejecución
+        id: run-check
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "RUN_OK=true" >> $GITHUB_ENV
+          else
+            echo "RUN_OK=false" >> $GITHUB_ENV
+          fi
+
+      - name: Revertir cambio si falló la ejecución
+        if: env.SYNTAX_OK == 'true' && env.RUN_OK == 'false'
+        working-directory: tradier
+        run: |
+          git reset --hard HEAD~1
+          echo "REVERTED=true" >> $GITHUB_ENV
+
+      - name: Comentar en PR si hubo error de sintaxis o ejecución
+        if: env.SYNTAX_OK == 'false' || env.RUN_OK == 'false'
+        run: |
+          gh pr comment "https://github.com/tbarato1804/tradier/pull/new/${{ env.BRANCH_NAME }}" \
+          --body "⚠️ El parche no fue aplicado automáticamente.  
+- Sintaxis válida: ${{ env.SYNTAX_OK }}
+- Ejecución del bot: ${{ env.RUN_OK }}
+
+Puedes revisar el archivo \`gpt_patch.py\` en la rama \`${{ env.BRANCH_NAME }}\` y aplicar manualmente si deseas."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Subir artefacto del parche
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpt_patch
+          path: tradier/gpt_patch.py
