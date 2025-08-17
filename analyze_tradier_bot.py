@@ -3,25 +3,37 @@ import openai
 
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Leer todos los archivos .py dentro de tradier/
 code_to_analyze = ""
 for root, _, files in os.walk("tradier"):
     for file in files:
         if file.endswith(".py") and not file.startswith("test_"):
             path = os.path.join(root, file)
-            with open(path, "r", encoding="utf-8") as f:
-                code_to_analyze += f"\n\n# === Archivo: {path} ===\n" + f.read()
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    if content.strip():  # Asegurarse que no está vacío
+                        code_to_analyze += f"\n\n# === Archivo: {path} ===\n{content}"
+            except Exception as e:
+                print(f"❌ Error al leer {path}: {e}")
 
+if not code_to_analyze.strip():
+    print("⚠️ No se encontró código para analizar.")
+    exit(0)
+
+# Solicitud a OpenAI con enfoque en mejoras + comentarios explicativos
 response = client.chat.completions.create(
     model="gpt-4o",
     messages=[
-        {"role": "system", "content": "Eres un experto en Python que sugiere mejoras y corrige errores en bots de trading."},
-        {"role": "user", "content": f"Este es el código actual del bot de trading:\n{code_to_analyze}\n\nSugiere una mejora o corrección con explicación. Responde solo con código dentro de bloque ```python."}
+        {"role": "system", "content": "Eres un experto en Python. Vas a analizar el siguiente bot de trading y sugerir mejoras claras, explicadas en los comentarios del código."},
+        {"role": "user", "content": f"Aquí está el código actual:\n{code_to_analyze}\n\nSugiéreme una mejora o corrección como código funcional dentro de un bloque ```python y con comentarios explicativos."}
     ]
 )
 
 sugg = response.choices[0].message.content.strip()
 sugg_clean = "\n".join([line for line in sugg.splitlines() if not line.strip().startswith("```")])
 
+# Guardar la sugerencia como archivo de parche
 with open("suggestion.txt", "w", encoding="utf-8") as f:
     f.write(sugg_clean)
 
