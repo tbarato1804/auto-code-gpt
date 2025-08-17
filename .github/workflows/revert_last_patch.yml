@@ -1,0 +1,23 @@
+name: Revert Last Suggestion Patch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  revert:
+    runs-on: ubuntu-latest
+    env:
+      TRADIER_TOKEN: ${{ secrets.TRADIER_TOKEN }}
+
+    steps:
+      - name: Clone Tradier repository
+        run: |
+          git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
+          cd tradier
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git checkout main
+          last_patch_commit=$(git log --grep="💡 Sugerencia automática de OpenAI" -n 1 --format=%H)
+          git revert $last_patch_commit --no-edit || echo "⚠️ No hay parche para revertir"
+          git checkout -b revert-last-patch
+          git push https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git revert-last-patch
