@@ -1,13 +1,13 @@
+name: Auto Fix and PR with GPT
 
-name: Auto Fix + PR
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  suggest-and-pr:
+  auto-fix:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -19,30 +19,29 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install openai black
+        run: pip install -r requirements.txt
 
-      - name: Run test_bot.py (simulación de error)
+      - name: Run test simulation
         run: python test_bot.py
 
-      - name: Run send_to_openai.py
+      - name: Generate suggestion with OpenAI
         run: python send_to_openai.py
 
-      - name: Format suggestion with Black (ignora errores)
-        run: |
-          black suggestion.txt || echo "⚠️ Black no pudo formatear suggestion.txt, pero seguimos con el workflow"
+      - name: Format suggestion with Black
+        run: black suggestion.txt || echo "⚠️ Black no pudo formatear suggestion.txt, pero seguimos con el workflow"
 
-      - name: Add markers and append to applied_suggestions.py
+      - name: Add GPT markers to applied_suggestions.py
         run: |
           echo "\n# === INICIO GPT SUGERENCIA ===" >> applied_suggestions.py
           cat suggestion.txt >> applied_suggestions.py
           echo "\n# === FIN GPT SUGERENCIA ===" >> applied_suggestions.py
 
-      - name: Set GitHub credentials
+      - name: Configure Git
         run: |
           git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.email "github-actions@users.noreply.github.com"
 
-      - name: Commit and push suggestion
+      - name: Commit and push changes
         run: |
           git add suggestion.txt applied_suggestions.py
           git commit -m "💡 Aplicación automática con marcas de GPT [skip ci]"
