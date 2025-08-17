@@ -1,4 +1,5 @@
-name: Analyze Tradier Bot and Create PR
+
+name: Analyze Tradier Bot and Suggest Fixes
 
 on:
   workflow_dispatch:
@@ -8,42 +9,41 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TRADIER_REPO: "https://github.com/tbarato1804/tradier.git"
+      TRADIER_TOKEN: ${{ secrets.TRADIER_TOKEN }}
 
     steps:
-      - name: Checkout analyzer repo
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Clonar repo de trading
-        run: git clone $TRADIER_REPO tradier
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Ejecutar analizador
+      - name: Run analysis script
         run: python analyze_tradier_bot.py
 
-      - name: Copiar sugerencia al repo de trading
+      - name: Clone Tradier repo privately
         run: |
-          cp gpt_patch.py tradier/
+          git clone https://tbarato1804:${{ env.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
 
-      - name: Subir rama con cambio sugerido
-        working-directory: tradier
+      - name: Create patch branch
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd tradier
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git checkout -b suggestion-patch-${{ github.run_id }}
+          cp ../gpt_patch.py .
           git add gpt_patch.py
           git commit -m "💡 Sugerencia automática de OpenAI [skip ci]"
-          git push origin suggestion-patch-${{ github.run_id }}
 
-      - name: Crear Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: tradier
-          commit-message: "💡 Sugerencia automática de OpenAI [skip ci]"
-          branch: suggestion-patch-${{ github.run_id }}
-          title: "💡 Sugerencia automática de OpenAI"
-          body: "Esta sugerencia fue generada automáticamente por el bot analizador del repositorio auto-code-gpt."
+      - name: Push branch and open PR
+        run: |
+          cd tradier
+          git push origin suggestion-patch-${{ github.run_id }}
+          gh pr create --title "💡 Sugerencia de mejora automática"                        --body "Este PR fue generado automáticamente por el bot de revisión con OpenAI."                        --head suggestion-patch-${{ github.run_id }}                        --base main
+        env:
+          GH_TOKEN: ${{ secrets.TRADIER_TOKEN }}
