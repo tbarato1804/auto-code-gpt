@@ -1,0 +1,18 @@
+name: Analizar bot Tradier con OpenAI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+
+jobs:
+  analizar:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Instalar dependencias
+        run: pip install openai
+      - name: Ejecutar análisis de código externo
+        run: python analyze_external_repo.py
