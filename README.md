@@ -1,11 +1,11 @@
-# Auto-Code GPT (con marcas)
+# Auto-Code GPT con Historial
 
 Este flujo automatiza:
 
-1. Prueba simulada (`test_bot.py`)
-2. Sugerencia de OpenAI (`send_to_openai.py`)
-3. Limpieza y formateo de código
-4. Inserta la sugerencia con marcas claras:
-   - `# === INICIO GPT SUGERENCIA ===`
-   - `# === FIN GPT SUGERENCIA ===`
-5. Commit y push al repositorio
+1. Ejecutar prueba simulada (`test_bot.py`)
+2. Obtener sugerencia desde OpenAI (`send_to_openai.py`)
+3. Guardar:
+   - `suggestion.txt` (última sugerencia)
+   - `history/suggestion-YYYYMMDD-HHMMSS.txt` (todas las sugerencias)
+4. Formatear, aplicar e insertar sugerencia al final de `applied_suggestions.py`
+5. Commit y push automático

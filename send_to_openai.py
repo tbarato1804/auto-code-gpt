@@ -2,6 +2,7 @@
 # send_to_openai.py
 import json
 import os
+from datetime import datetime
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -41,7 +42,13 @@ def main():
     with open("suggestion.txt", "w") as f:
         f.write(cleaned_suggestion)
 
-    print("✍️ Sugerencia limpia guardada en suggestion.txt")
+    # Guardar historial con timestamp
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    history_path = f"history/suggestion-{timestamp}.txt"
+    with open(history_path, "w") as f:
+        f.write(cleaned_suggestion)
+
+    print(f"✍️ Sugerencia guardada en suggestion.txt y {history_path}")
 
 if __name__ == "__main__":
     main()
