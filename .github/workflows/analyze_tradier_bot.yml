@@ -18,10 +18,14 @@ jobs:
       - name: Install dependencies
         run: pip install openai
 
-      - name: Analyze with OpenAI and create PR
+      - name: Clone Tradier repository
+        run: git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
+
+      - name: Run OpenAI analysis
+        run: python analyze_tradier_bot.py
+
+      - name: Create patch branch and push PR
         run: |
-          python analyze_tradier_bot.py
-          git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
           cd tradier
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
