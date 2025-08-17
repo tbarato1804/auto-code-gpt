@@ -1,9 +1,8 @@
-# Auto-Code GPT (Fixed Version)
+# Auto-Code GPT (Aplica sugerencia al archivo)
 
-Este repositorio automatiza:
-
-1. Test simulado (`test_bot.py`)
-2. Envío a OpenAI (`send_to_openai.py`)
-3. Limpieza del código sugerido
-4. Formateo automático con `black`
-5. Commit automático si pasa validación
+Este repositorio automatiza el flujo de:
+1. Ejecutar prueba simulada
+2. Obtener sugerencia de OpenAI
+3. Limpiar y formatear el código sugerido
+4. Insertar sugerencia al final de `applied_suggestions.py`
+5. Guardar cambios con commit automático

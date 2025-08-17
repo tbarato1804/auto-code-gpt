@@ -1,11 +1,11 @@
 
-name: Test Bot + OpenAI Suggestion + Auto Commit
+name: Test Bot + OpenAI Suggestion + Apply to File
 
 on:
   workflow_dispatch:
 
 jobs:
-  run-test-suggest-and-commit:
+  run-test-suggest-and-apply:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,19 +29,24 @@ jobs:
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-    - name: Auto-format suggestion with black
+    - name: Auto-format suggestion
       run: black suggestion.txt
 
-    - name: Validate suggestion format with black
+    - name: Validate suggestion format
       run: |
         black --check suggestion.txt || (echo '❌ El código sugerido no pasa black' && exit 1)
 
-    - name: Commit suggestion to repo
+    - name: Append suggestion to Python file
+      run: |
+        echo "\n# 💡 Sugerencia automática generada por OpenAI" >> applied_suggestions.py
+        cat suggestion.txt >> applied_suggestions.py
+
+    - name: Commit result
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
-        git add suggestion.txt
-        git commit -m "💡 Sugerencia automática de OpenAI [skip ci]"
+        git add suggestion.txt applied_suggestions.py
+        git commit -m "💡 Aplicación automática de sugerencia GPT [skip ci]"
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
