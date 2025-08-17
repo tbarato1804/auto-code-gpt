@@ -18,8 +18,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Clonar repo Tradier con autenticación
-        run: |
-          git clone https://tbarato1804:${{ secrets.TRADIER_PAT }}@github.com/tbarato1804/tradier.git tradier
+        run: git clone https://tbarato1804:${{ secrets.TRADIER_PAT }}@github.com/tbarato1804/tradier.git tradier
 
 
       - name: Instalar dependencias
