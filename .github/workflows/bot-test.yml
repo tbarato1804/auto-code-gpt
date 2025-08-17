@@ -1,5 +1,5 @@
 
-name: Test Bot + OpenAI Suggestion + Apply to File
+name: Test Bot + OpenAI Suggestion + Apply to File (Marked)
 
 on:
   workflow_dispatch:
@@ -36,17 +36,18 @@ jobs:
       run: |
         black --check suggestion.txt || (echo '❌ El código sugerido no pasa black' && exit 1)
 
-    - name: Append suggestion to Python file
+    - name: Append suggestion with markers to file
       run: |
-        echo "\n# 💡 Sugerencia automática generada por OpenAI" >> applied_suggestions.py
+        echo "\n# === INICIO GPT SUGERENCIA ===" >> applied_suggestions.py
         cat suggestion.txt >> applied_suggestions.py
+        echo "\n# === FIN GPT SUGERENCIA ===" >> applied_suggestions.py
 
     - name: Commit result
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git add suggestion.txt applied_suggestions.py
-        git commit -m "💡 Aplicación automática de sugerencia GPT [skip ci]"
+        git commit -m "💡 Aplicación automática con marcas de GPT [skip ci]"
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
