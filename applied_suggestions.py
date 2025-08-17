@@ -38,3 +38,15 @@ def get_tradier_api_key():
 # Uso de la clave
 api_key = get_tradier_api_key()
 \n# === FIN GPT SUGERENCIA ===
+\n# === INICIO GPT SUGERENCIA ===
+import os
+
+# Asegúrate de que la variable de entorno está definida
+API_KEY = os.getenv("TRADIER_API_KEY")
+if not API_KEY:
+    raise EnvironmentError(
+        "La variable de entorno 'TRADIER_API_KEY' no está definida. Asegúrate de configurarla antes de ejecutar el script."
+    )
+
+# Resto del código que utiliza la API_KEY
+\n# === FIN GPT SUGERENCIA ===

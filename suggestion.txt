@@ -1,13 +1,10 @@
 import os
 
+# Asegúrate de que la variable de entorno está definida
+API_KEY = os.getenv("TRADIER_API_KEY")
+if not API_KEY:
+    raise EnvironmentError(
+        "La variable de entorno 'TRADIER_API_KEY' no está definida. Asegúrate de configurarla antes de ejecutar el script."
+    )
 
-# Intenta obtener la clave de la API de una forma segura
-def get_tradier_api_key():
-    try:
-        return os.environ["TRADIER_API_KEY"]
-    except KeyError:
-        raise LookupError("La variable de entorno 'TRADIER_API_KEY' no está definida.")
-
-
-# Uso de la clave
-api_key = get_tradier_api_key()
+# Resto del código que utiliza la API_KEY
