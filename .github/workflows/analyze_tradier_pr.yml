@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TRADIER_REPO: "https://github.com/tbarato1804/tradier.git"
+      GH_PAT: ${{ secrets.GH_PAT }}
 
     steps:
       - name: Checkout this repo
@@ -21,8 +20,10 @@ jobs:
       - name: Instalar dependencias
         run: pip install openai black
 
-      - name: Clonar repo Tradier
-        run: git clone $TRADIER_REPO tradier
+      - name: Clone Tradier repo
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/tbarato1804/tradier.git tradier
+
 
       - name: Analizar errores (simulación)
         run: |
