@@ -1,0 +1,39 @@
+name: Crear PR al Tradier Bot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  pr-to-tradier-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bot reparador
+        uses: actions/checkout@v3
+
+      - name: Clonar repo Tradier Bot
+        run: |
+          git clone https://x-access-token:${{ secrets.TRADIER_BOT_PAT }}@github.com/tbarato1804/tradier-bot.git
+          ls tradier-bot/
+
+      - name: Copiar sugerencia al Tradier Bot
+        run: |
+          cp suggestion.txt tradier-bot/suggestion_patch.py
+          cd tradier-bot
+          git config user.name "auto-code-gpt"
+          git config user.email "actions@github.com"
+          git checkout -b patch/suggestion
+          git add suggestion_patch.py
+          git commit -m "💡 Sugerencia generada automáticamente"
+          git push origin patch/suggestion
+
+      - name: Crear Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.TRADIER_BOT_PAT }}
+          path: tradier-bot
+          branch: patch/suggestion
+          base: main
+          title: "💡 Sugerencia automática del bot reparador"
+          body: |
+            Esta sugerencia fue generada automáticamente por el bot `auto-code-gpt`.
+            Puedes revisarla y aprobarla si es útil.
