@@ -1,0 +1,42 @@
+
+name: Auto Pull Request from GPT Suggestion
+
+on:
+  workflow_run:
+    workflows: ["Run Bot Suggestion Flow"]
+    types:
+      - completed
+
+jobs:
+  create-pr:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create branch
+        run: |
+          BRANCH_NAME=suggestion/gpt-$(date +'%Y%m%d-%H%M%S')
+          git checkout -b $BRANCH_NAME
+          git add applied_suggestions.py suggestion.txt
+          git commit -m "💡 Nueva sugerencia automática de GPT [skip ci]"
+          git push origin $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "💡 Nueva sugerencia automática de GPT [skip ci]"
+          title: "💡 Nueva sugerencia automática de GPT"
+          body: |
+            Esta PR contiene una sugerencia generada automáticamente por OpenAI.
+            Por favor revisa los cambios antes de hacer merge.
+          branch: ${{ env.BRANCH_NAME }}
