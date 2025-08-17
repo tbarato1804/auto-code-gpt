@@ -50,3 +50,15 @@ if not API_KEY:
 
 # Resto del código que utiliza la API_KEY
 \n# === FIN GPT SUGERENCIA ===
+\n# === INICIO GPT SUGERENCIA ===
+import os
+
+# Asegúrate de que la variable de entorno TRADIER_API_KEY esté establecida
+tradier_api_key = os.getenv("TRADIER_API_KEY")
+if tradier_api_key is None:
+    raise EnvironmentError(
+        "La variable de entorno 'TRADIER_API_KEY' no está establecida."
+    )
+
+# Resto del código donde se utiliza tradier_api_key
+\n# === FIN GPT SUGERENCIA ===
