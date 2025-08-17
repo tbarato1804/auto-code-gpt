@@ -1,18 +1,50 @@
-name: Analizar bot Tradier con OpenAI
+
+name: Analyze and Suggest Fixes to Tradier Bot
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 3 * * 1'
+    - cron: '0 * * * *'  # Cada hora
+  workflow_dispatch:
 
 jobs:
-  analizar:
+  analyze-and-fix:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TRADIER_BOT_PAT: ${{ secrets.TRADIER_BOT_PAT }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Instalar dependencias
-        run: pip install openai
-      - name: Ejecutar análisis de código externo
-        run: python analyze_external_repo.py
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Clone tradier repo (privado)
+        run: |
+          git clone https://tbarato1804:${{ secrets.TRADIER_BOT_PAT }}@github.com/tbarato1804/tradier.git
+          ls tradier
+
+      - name: Install dependencies
+        run: |
+          pip install openai black
+
+      - name: Run analysis with OpenAI
+        run: python analyze_tradier_bot.py
+
+      - name: Format suggestion if possible
+        run: |
+          black suggestion.txt || echo "⚠️ Black failed, continuing anyway"
+
+      - name: Apply suggestion if clean
+        run: |
+          echo "
+# === INICIO GPT SUGERENCIA ===" >> tradier/applied_suggestions.py
+          cat suggestion.txt >> tradier/applied_suggestions.py
+          echo "
+# === FIN GPT SUGERENCIA ===" >> tradier/applied_suggestions.py
+
+      - name: Commit & push
+        run: |
+          cd tradier
+          git config user.name "github-actions"
+          git config user.email "bot@github.com"
+          git add applied_suggestions.py suggestion.txt || true
+          git commit -m "💡 Sugerencia automática de OpenAI [skip ci]" || echo "Nada que commitear"
+          git push origin main || echo "No se pudo pushear cambios"
