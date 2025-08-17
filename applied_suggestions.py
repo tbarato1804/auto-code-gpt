@@ -1,10 +1,1 @@
 # Archivo de pruebas para sugerencias automáticas de GPT
-\n# === INICIO GPT SUGERENCIA ===
-import os
-
-# Asegúrate de que la variable de entorno 'TRADIER_API_KEY' esté configurada
-try:
-    tradier_api_key = os.environ["TRADIER_API_KEY"]
-except KeyError:
-    raise RuntimeError("La variable de entorno TRADIER_API_KEY no está configurada.")
-\n# === FIN GPT SUGERENCIA ===
