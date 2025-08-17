@@ -35,20 +35,13 @@ jobs:
           git commit -m "💡 Sugerencia automática de OpenAI [skip ci]"
           git push https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git suggestion-patch-${{ github.run_id }}
 
-      - name: Subir gpt_patch.py como artefacto para inspección
+      - name: Copiar gpt_patch.py para inspección local
+        run: |
+          mkdir -p suggestions
+          cp tradier/gpt_patch.py suggestions/gpt_patch.py
+
+      - name: Subir gpt_patch.py como artefacto descargable
         uses: actions/upload-artifact@v4
         with:
           name: gpt_patch
-          path: gpt_patch.py
-
-
-      - name: Guardar copia en auto-code-gpt/suggestions/
-        run: |
-          mkdir -p suggestions
-          cp gpt_patch.py suggestions/gpt_patch_${{ github.run_id }}.py
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add suggestions/gpt_patch_${{ github.run_id }}.py
-          git commit -m "📎 Copia local de sugerencia gpt_patch.py [skip ci]" || echo "Nada que commitear"
-          git push origin main || echo "No se pudo pushear, quizás no es main"
-
+          path: suggestions/gpt_patch.py
