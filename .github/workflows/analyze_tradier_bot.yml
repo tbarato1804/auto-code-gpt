@@ -21,7 +21,7 @@ jobs:
       - name: Analyze with OpenAI and create PR
         run: |
           python analyze_tradier_bot.py
-          git clone https://github.com/tbarato1804/tradier.git tradier
+          git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
           cd tradier
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
