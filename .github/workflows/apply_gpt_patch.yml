@@ -1,10 +1,14 @@
-name: Apply GPT Patch with Safety Checks
+name: Apply GPT Patch Manually
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Rama con la sugerencia (ej: suggestion-patch-17018xxxx)'
+        required: true
 
 jobs:
-  apply-and-test:
+  apply-patch:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -12,74 +16,40 @@ jobs:
       TRADIER_TOKEN: ${{ secrets.TRADIER_TOKEN }}
 
     steps:
-      - name: Clonar Tradier Repo
-        run: git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
-
-      - name: Cambiar a rama del último parche
-        working-directory: tradier
+      - name: Clonar repositorio Tradier y cambiar a la rama
         run: |
-          branch=$(git branch -r | grep 'suggestion-patch' | tail -n 1 | sed 's/.*origin\///')
-          echo "Última rama: $branch"
-          echo "BRANCH_NAME=$branch" >> $GITHUB_ENV
-          git checkout $branch
+          git clone https://x-access-token:${{ secrets.TRADIER_TOKEN }}@github.com/tbarato1804/tradier.git tradier
+          cd tradier
+          git checkout ${{ github.event.inputs.branch }}
 
       - name: Verificar sintaxis del parche
-        working-directory: tradier
+        id: syntax
         run: |
-          cp gpt_patch.py gpt_patch_temp.py
-          python -m py_compile gpt_patch_temp.py
-        continue-on-error: true
+          cp tradier/gpt_patch.py tradier/gpt_patch_temp.py
+          python -m py_compile tradier/gpt_patch_temp.py && echo "ok=true" >> $GITHUB_OUTPUT || echo "ok=false" >> $GITHUB_OUTPUT
 
-      - name: Evaluar resultado de compilación
-        id: check-syntax
+      - name: Aplicar parche si pasa verificación
+        if: steps.syntax.outputs.ok == 'true'
         run: |
-          if [ -f tradier/gpt_patch_temp.pyc ]; then
-            echo "SYNTAX_OK=true" >> $GITHUB_ENV
-          else
-            echo "SYNTAX_OK=false" >> $GITHUB_ENV
-          fi
+          cp tradier/gpt_patch_temp.py tradier/applied_patch.py
+          echo "✅ Patch aplicado correctamente."
 
-      - name: Aplicar parche si sintaxis es válida
-        if: env.SYNTAX_OK == 'true'
-        working-directory: tradier
-        run: cp gpt_patch_temp.py applied_patch.py
-
-      - name: Probar ejecución de bot
-        if: env.SYNTAX_OK == 'true'
-        working-directory: tradier
-        run: python main.py
-        continue-on-error: true
-
-      - name: Verificar ejecución
-        id: run-check
+      - name: Comentar en el Pull Request si falla
+        if: steps.syntax.outputs.ok != 'true'
         run: |
-          if [ $? -eq 0 ]; then
-            echo "RUN_OK=true" >> $GITHUB_ENV
-          else
-            echo "RUN_OK=false" >> $GITHUB_ENV
-          fi
+          gh auth setup-git
+          cd tradier
+          PR_URL=$(gh pr list --head "${{ github.event.inputs.branch }}" --json url -q '.[0].url')
+          gh pr comment "$PR_URL" --body "❌ El parche no fue aplicado automáticamente porque contiene errores de sintaxis en \`gpt_patch.py\`.
 
-      - name: Revertir cambio si falló la ejecución
-        if: env.SYNTAX_OK == 'true' && env.RUN_OK == 'false'
-        working-directory: tradier
-        run: |
-          git reset --hard HEAD~1
-          echo "REVERTED=true" >> $GITHUB_ENV
+Puedes revisarlo manualmente o corregirlo antes de aplicarlo."
 
-      - name: Comentar en PR si hubo error de sintaxis o ejecución
-        if: env.SYNTAX_OK == 'false' || env.RUN_OK == 'false'
-        run: |
-          gh pr comment "https://github.com/tbarato1804/tradier/pull/new/${{ env.BRANCH_NAME }}" \
-          --body "⚠️ El parche no fue aplicado automáticamente.  
-- Sintaxis válida: ${{ env.SYNTAX_OK }}
-- Ejecución del bot: ${{ env.RUN_OK }}
-
-Puedes revisar el archivo \`gpt_patch.py\` en la rama \`${{ env.BRANCH_NAME }}\` y aplicar manualmente si deseas."
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Subir artefacto del parche
+      - name: Subir archivos como artefactos
         uses: actions/upload-artifact@v4
         with:
-          name: gpt_patch
-          path: tradier/gpt_patch.py
+          name: gpt_patch_manual
+          path: |
+            tradier/gpt_patch.py
+            tradier/gpt_patch_temp.py
+            tradier/applied_patch.py
+          if-no-files-found: warn
