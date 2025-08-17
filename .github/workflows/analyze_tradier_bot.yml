@@ -36,9 +36,12 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git checkout -b suggestion-patch-${{ github.run_id }}
-          cp ../gpt_patch.py .
+      - name: Copiar y renombrar sugerencia como gpt_patch.py
+        run: |
+          cp ../suggestion.txt gpt_patch.py
           git add gpt_patch.py
           git commit -m "💡 Sugerencia automática de OpenAI [skip ci]"
+
 
       - name: Push branch and open PR
         run: |
